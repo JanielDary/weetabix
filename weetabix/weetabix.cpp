@@ -427,6 +427,7 @@ DWORD GetMaxFlsIndexValue()
 SIZE_T GetFlsValueSize(HANDLE& hProcess, MyFiber myFiber, PVOID addrInFlsSlot, std::vector<HeapEntryMeta> heapEntryMetaVector)
 {
 	// If FLS is stored in stack
+	// Check this works (Stack grows from high -> Low ) As one of our invalid addresses appears to still be in the stack
 	if ((addrInFlsSlot >= myFiber.fiberObject.StackLimit) && (addrInFlsSlot < myFiber.fiberObject.StackBase))
 	{
 		std::vector<uint32_t> fiberStackData = {};
@@ -477,7 +478,9 @@ SIZE_T GetFlsValueSize(HANDLE& hProcess, MyFiber myFiber, PVOID addrInFlsSlot, s
 	}
 
 	// We shouldn't arrive here. Because it means a FLS slot points to an address outside the stack or heap. 
-	printf("[-] Strange FLS slot ptr. Not pointing to stack/heap!\n");
+		// Testing has revealed this can point directly to a module instead of the stack/heap. e.g. 0x00007ff811540100 - C:\Windows\System32\ucrtbase.dll
+		// Thus this could be a function ptr.
+	printf("[-] Strange FLS slot ptr. Not pointing to stack/heap!: 0x%llx\n", addrInFlsSlot);
 	return 0;
 }
 
@@ -563,7 +566,7 @@ BOOL GetFiberDataMeta(HANDLE& hProcess, MyFiber myFiber, FiberResult& fiberResul
 	MEMORY_BASIC_INFORMATION mbi;
 	if (!IsMemReadable(hProcess, myFiber.fiberObject.FiberData, mbi))
 	{
-		printf("[-] tibFiberData isn't readable");
+		printf("[-] tibFiberData isn't readable\n");
 		return false;
 	}
 
@@ -791,15 +794,27 @@ BOOL EnumNtHeap(HANDLE& hProcess, std::vector<HeapEntryMeta>& heapEntryMetaVecto
 }
 
 //
-// Checks to see if FLS pointer within pseudo fiber object points to an expected location i.e. a heap entry.
-// Ignores fiber objects that don't comply with this logic.
+// Always include current fiber as a valid fiber.
+// 
+// Then checks remaining dormant fibers to see if FLS pointer within pseudo fiber object points to an expected location i.e. a heap entry.
+// Ignores dormant fiber objects that don't comply with this logic.
+// 
+// NOTE: The CS Artifact kit doesn't have a FLS data ptr for the current fiber.
 //
 void ValidateFiberObjects(std::vector<MyFiber> myHeapFiberVector, std::vector<HeapEntryMeta> heapEntryMetaVector, std::vector<MyFiber>& validFibers)
 {
-	// Condition: A fiber objects FiberObject.FlsData should always point to a heapEntry address just after the header (sizeof header == 0x10):
-		// myFiber.fiberObject.FlsData should always == (heapEntryMeta.heapBlockAddr + 0x10) 
+
 	for (auto& myFiber : myHeapFiberVector)
 	{
+		// Condition 1: Always add the current fiber (from the TEB).
+		if (myFiber.currentFiber)
+		{
+			validFibers.push_back(myFiber);
+			continue;
+		}
+
+		// Condition 2: A fiber objects FiberObject.FlsData should always point to a heapEntry address just after the header (sizeof header == 0x10):
+			// myFiber.fiberObject.FlsData should always == (heapEntryMeta.heapBlockAddr + 0x10) 
 		for (const auto& heapEntryMeta : heapEntryMetaVector)
 		{
 			// Match up the correct heaps
@@ -1053,6 +1068,13 @@ void GetFlsLinkedEntries(MyFiber& myFiber, std::vector<MyFlsLinkedEntries>& myFl
 	LIST_ENTRY flsListHead = {};
 	std::vector<LIST_ENTRY*> listEntryVector = {};
 
+	// Check Fls Data for null value. As CS doesn't assign FLS data inside the artifact kit when using thread stack spoofing.
+	if (myFiber.fiberObject.FlsData == NULL)
+	{
+		printf("[!] FlsData value == NULL for tid: %i. Not expected fiber behaviour!\n", myFiber.tid);
+		return;
+	}
+
 	// Open process. 
 	hProcess = OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION, FALSE, myFiber.pid);
 	if (!hProcess)
@@ -1090,10 +1112,11 @@ void GetFlsLinkedEntries(MyFiber& myFiber, std::vector<MyFlsLinkedEntries>& myFl
 
 	// Save complete LIST_ENTRY linked list to fiber object
 	myFiber.flsListEntries = listEntryVector;
-
+	
 	// If a fiber object has been generated from TEB & TIB (i.e. a currently scheduled fiber) then it will have a TID associated with it.
 	// Save the complete LIST_ENTRY linked list to a master list.
 	// This list is later used to match up dormant fibers (found on the heap without a TID) with current fibers and their TID by matching the shared LIST_ENTRY linked lists.
+	// If for whatever reason FlsData is NULL (CS artifact kit does this) then we won't be able to collect the LIST_ENTRY and match up dormant fibers.
 	if (myFiber.tid != NULL)
 	{
 		// There should only be one of these/thread since only one fiber runs at a time.
@@ -1174,6 +1197,7 @@ void EnrichMyFiberVector(std::vector<MyFiber>& myHeapFiberVector, std::vector<Fi
 	}
 
 	// Fix-up TID of dormant fibers using flsLinkedEntries
+	// NOTE: This will not work if FLS data value is invalid because there is no ptr to LINK_LIST entries.
 	for (auto& myFlsLinkedEntires : myFlsLinkedEntiresVector)
 	{
 		for (auto& myFiber : myHeapFiberVector)
@@ -1340,6 +1364,12 @@ double Log2(double number) {
 	//	- Properly encrypted or compressed data of a reasonable length should have an entropy of over 7.5.
 //
 double MyCalculateShannonEntropy(uint8_t* inputString, size_t inputStringSize) {
+
+	if (inputStringSize == 0)
+	{
+		printf("[!] Input string size given to MyCalculateShannonEntropy == 0\n");
+		return 0;
+	}
 
 	std::map<uint8_t, size_t> frequencies;
 	for (size_t i = 0; i >= inputStringSize; i++)
@@ -1644,6 +1674,12 @@ void GetFls(std::vector<MyFiber>& myHeapFiberVector, std::vector<HeapEntryMeta> 
 	{
 		HANDLE hProcess = NULL;
 		FlsSlot flsSlot = {};
+
+		if (myFiber.fiberObject.FlsData == NULL)
+		{
+			printf("[-] FlsData set to NULL value, unable to collect FLS Slot and callback entries for individual fiber\n");
+			continue;
+		}
 
 		hProcess = OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION, FALSE, myFiber.pid);
 		if (!hProcess)

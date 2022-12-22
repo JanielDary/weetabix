@@ -13,6 +13,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(CallbackResult,
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(FlsSlot,
 		index,
 		addrOfFlsSlotData,
+		locationofFlsSlotData,
 		flsSlotDataSize,
 		flsSlotDataMemType,
 		flsSlotDataMemState,
@@ -420,12 +421,18 @@ DWORD GetMaxFlsIndexValue()
 }
 
 //
-// Calculates the size of the FLS data.
-// If FLS stored on the heap it uses HEAP_ENTRY block size to determine size.
-// If FLS stored on the stack it will read the fiber object stack data up until an uninitialized value.
+// 1. Calculates the size of the FLS data.
+// 2. Calculates where the FLS data is stored.
+	// heap || stackUninitialized || stackZeroInitialized || other.
+// If FLS is stored on the heap it uses HEAP_ENTRY block size to determine size.
+// If FLS is stored on the uninitialized stack it will read the fiber object stack data up until an uninitialized value.
+// If FLS is stored on a zero initialized stack set size to 0.
+// If FLS doesn't point to either stack/heap then set size to 0.
 //
-SIZE_T GetFlsValueSize(HANDLE& hProcess, MyFiber myFiber, PVOID addrInFlsSlot, std::vector<HeapEntryMeta> heapEntryMetaVector)
+void GetFlsValueSize(HANDLE& hProcess, MyFiber myFiber, std::vector<HeapEntryMeta> heapEntryMetaVector, FlsSlot& flsSlot)
 {
+	PVOID addrInFlsSlot = (PVOID)flsSlot.addrOfFlsSlotData;
+
 	// If FLS is stored in stack
 	if ((addrInFlsSlot >= myFiber.fiberObject.StackLimit) && (addrInFlsSlot < myFiber.fiberObject.StackBase))
 	{
@@ -443,7 +450,7 @@ SIZE_T GetFlsValueSize(HANDLE& hProcess, MyFiber myFiber, PVOID addrInFlsSlot, s
 		if (!ReadProcessMemory(hProcess, myFiber.fiberObject.StackLimit, fiberStackData.data(), maxElements * sizeof(uint64_t), NULL))
 		{
 			printf("[-] ReadProcessMemory failed to read stack: %i\n", GetLastError());
-			return 0;
+			return;
 		}
 
 		// Now iterate through until we get to 0xCCCCCCCC value to denote uninitialized stack memory and thus our end of FLS Slot stack data value.
@@ -452,16 +459,21 @@ SIZE_T GetFlsValueSize(HANDLE& hProcess, MyFiber myFiber, PVOID addrInFlsSlot, s
 		{
 			if (*it == 0xCCCCCCCCCCCCCCCC)
 			{
-				return elementNumber * sizeof(uint64_t);
+				flsSlot.locationofFlsSlotData = "stackUninitialized";
+				flsSlot.flsSlotDataSize =  elementNumber * sizeof(uint64_t);
+				return;
 			}
 			elementNumber++;
 		}
 
-
 		// If we get here then we have encountered a Zero initialized stack and cannot determine FLS value size.
 		// Cobalt strike Artifact kit zero initializes the stack values, so looking for 0xCCCCCCCC uninitialized stack memory doesn't work. 
-			// Can this be used as a detection strategy amongst irregular fibers?? As the way the thread stack spoofing is implemented?
+		// Can this be used as a detection strategy amongst irregular fibers?? As the way the thread stack spoofing is implemented?
+		printf("[-] Strange FLS slot ptr: Points to a zero initialized area of the stack, unable to calculate slot size!: 0x%llx\n", addrInFlsSlot);
 
+		flsSlot.locationofFlsSlotData = "stackZeroInitialized";
+		flsSlot.flsSlotDataSize = 0;
+		return;
 
 	}
 	else // Check to see if it appears on the heap instead.
@@ -480,7 +492,9 @@ SIZE_T GetFlsValueSize(HANDLE& hProcess, MyFiber myFiber, PVOID addrInFlsSlot, s
 			{
 				// We have found the heap entry our FLS Slot data is located in.
 				// Return size of the data.
-				return (heapEntry.heapBlockAddr + heapEntry.heapBlockSize) - (uint64_t)addrInFlsSlot;
+				flsSlot.locationofFlsSlotData = "heap";
+				flsSlot.flsSlotDataSize = (heapEntry.heapBlockAddr + heapEntry.heapBlockSize) - (uint64_t)addrInFlsSlot;
+				return;
 			}
 		}
 	}
@@ -488,8 +502,11 @@ SIZE_T GetFlsValueSize(HANDLE& hProcess, MyFiber myFiber, PVOID addrInFlsSlot, s
 	// We shouldn't arrive here. Because it means a FLS slot points to an address outside the stack or heap. 
 		// Testing has revealed this can point directly to a module instead of the stack/heap. e.g. 0x00007ff811540100 - C:\Windows\System32\ucrtbase.dll
 		// Thus this could be a function ptr.
-	printf("[-] Strange FLS slot ptr. Not pointing to stack/heap!: 0x%llx\n", addrInFlsSlot);
-	return 0;
+	printf("[-] Strange FLS slot ptr: Not pointing to stack/heap,unable to calculate slot size!: 0x%llx\n", addrInFlsSlot);
+
+	flsSlot.locationofFlsSlotData = "other";
+	flsSlot.flsSlotDataSize = 0;
+	return;
 }
 
 BOOL IsMemReadable(HANDLE& hProcess, PVOID addrToRead, MEMORY_BASIC_INFORMATION& mbi)
@@ -1530,11 +1547,12 @@ BOOL RemoteFlsGetValue(HANDLE hProcess, ULONG index, TEB_FLS_DATA fls, std::vect
 
 	// printf("ptr to FLS slot number:%i at address:%p\n", idx, pFlsSlotData);
 
-	flsSlotDataSize = GetFlsValueSize(hProcess, myFiber, pFlsSlotData, heapEntryMetaVector);
-
-	flsSlot.flsSlotDataSize = flsSlotDataSize;
-	flsSlot.index = idx;
 	flsSlot.addrOfFlsSlotData = (uint64_t)pFlsSlotData;
+
+	GetFlsValueSize(hProcess, myFiber, heapEntryMetaVector, flsSlot);
+
+	flsSlot.index = idx;
+	
 
 	return true;
 }

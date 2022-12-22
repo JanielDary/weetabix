@@ -137,6 +137,7 @@ struct FlsSlot
 {
 	DWORD index;
 	uint64_t addrOfFlsSlotData; // This will exist either on the stack/heap.
+	std::string locationofFlsSlotData; // heap||stackUninitialized||stackZeroInitialized||other. 
 	SIZE_T flsSlotDataSize;
 	DWORD flsSlotDataMemType;
 	DWORD flsSlotDataMemState;
@@ -288,7 +289,7 @@ void EnrichMyFiberVector(std::vector<MyFiber>& myHeapFiberVector, std::vector<Fi
 void GetFlsLinkedEntries(MyFiber& myFiber, std::vector<MyFlsLinkedEntries>& myFlsLinkedEntiresVector);
 void GetFls(std::vector<MyFiber>& myHeapFiberVector, std::vector<HeapEntryMeta> heapEntryMetaVector);
 BOOL RemoteFlsGetValue(HANDLE hProcess, ULONG index, TEB_FLS_DATA fls, std::vector<HeapEntryMeta> heapEntryMetaVector, MyFiber& myFiber, FlsSlot& flsSlot);
-SIZE_T GetFlsValueSize(HANDLE& hProcess, MyFiber myFiber, PVOID addrInFlsSlot, std::vector<HeapEntryMeta> heapEntryMetaVector);
+void GetFlsValueSize(HANDLE& hProcess, MyFiber myFiber, std::vector<HeapEntryMeta> heapEntryMetaVector, FlsSlot& flsSlot);
 static unsigned int GetFlsChunkSz(unsigned int chunk_index);
 static unsigned int GetFlsChunkIndexFromIndex(unsigned int index, unsigned int* index_in_chunk);
 

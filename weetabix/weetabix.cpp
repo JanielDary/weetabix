@@ -31,6 +31,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(FiberResult,
 		pid,
 		tid,
 		processName,
+		flsAddr,
 		fiberDataAddr,
 		fiberDataUnbackedMem,
 		fiberDataAddrModBaseName,
@@ -55,6 +56,7 @@ void ToJson(json& j, const FiberResult& r)
 		{"fiber_data_mem_state", r.fiberDataMemState},
 		{"fiber_data_entropy", r.fiberDataEntropyScore},
 		{"fiber_callbacks", r.callbackResultVector},
+		{"fiber_local_storage_address", r.flsAddr},
 		{"fiber_local_storage", r.flsSlotVector} };
 }
 
@@ -303,6 +305,9 @@ BOOL GetFlsSlotsMeta(HANDLE& hProcess, MyFiber myFiber, FiberResult& fiberResult
 	size_t nBytesRead;
 	int index;
 
+	// Save FLS Data address.
+	fiberResult.flsAddr = (uint64_t)myFiber.fiberObject.FlsData;
+
 	// Iterate through FLS slots
 	// The flsSlot data could be in raw format OR a pointer to somewhere else in memory.
 	// We expect FLS index 1 to point the error codes. in urc module.
@@ -502,7 +507,7 @@ void GetFlsValueSize(HANDLE& hProcess, MyFiber myFiber, std::vector<HeapEntryMet
 	// We shouldn't arrive here. Because it means a FLS slot points to an address outside the stack or heap. 
 		// Testing has revealed this can point directly to a module instead of the stack/heap. e.g. 0x00007ff811540100 - C:\Windows\System32\ucrtbase.dll
 		// Thus this could be a function ptr.
-	printf("[-] Strange FLS slot ptr: Not pointing to stack/heap,unable to calculate slot size!: 0x%llx\n", addrInFlsSlot);
+	printf("[-] Strange FLS slot ptr: Not pointing to stack/heap, unable to calculate slot size!: 0x%llx\n", addrInFlsSlot);
 
 	flsSlot.locationofFlsSlotData = "other";
 	flsSlot.flsSlotDataSize = 0;

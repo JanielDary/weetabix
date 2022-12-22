@@ -200,6 +200,7 @@ struct FiberResult
 	DWORD pid;
 	DWORD tid;
 	std::string processName;
+	uint64_t flsAddr;
 	uint64_t fiberDataAddr;
 	bool fiberDataUnbackedMem = false;
 	std::string fiberDataAddrModBaseName;

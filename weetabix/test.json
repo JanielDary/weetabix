@@ -1,4 +1,18 @@
 {
+  "fiber_callbacks": [],
+  "fiber_data_addr_module": "",
+  "fiber_data_address": 2418634645136,
+  "fiber_data_entropy": 0.0,
+  "fiber_data_mem_prot": 4,
+  "fiber_data_mem_state": 4096,
+  "fiber_data_mem_type": 131072,
+  "fiber_data_unbacked": true,
+  "fiber_local_storage": [],
+  "fiber_local_storage_address": 0,
+  "pid": 8264,
+  "process_name": "C:\\Users\\Dan\\Downloads\\file.exe",
+  "tid": 7856
+} {
   "fiber_callbacks": [
     {
       "callback": 18446744073709551615,
@@ -21,7 +35,7 @@
       "index": 1
     },
     {
-      "callback": 2670149833844,
+      "callback": 2418633413748,
       "callbackMemProt": 64,
       "callbackMemState": 4096,
       "callbackMemType": 131072,
@@ -80,7 +94,7 @@
   "fiber_data_unbacked": true,
   "fiber_local_storage": [
     {
-      "addrOfFlsSlotData": 2670151930816,
+      "addrOfFlsSlotData": 2418636886976,
       "associatedCallback": 140730281076800,
       "associatedCallbackFound": true,
       "flsDataIsPtr": false,
@@ -97,8 +111,8 @@
       "locationofFlsSlotData": "heap"
     },
     {
-      "addrOfFlsSlotData": 2670150287248,
-      "associatedCallback": 2670149833844,
+      "addrOfFlsSlotData": 2418634193776,
+      "associatedCallback": 2418633413748,
       "associatedCallbackFound": true,
       "flsDataIsPtr": false,
       "flsDataPtrMemProt": 0,
@@ -131,7 +145,7 @@
       "locationofFlsSlotData": "other"
     },
     {
-      "addrOfFlsSlotData": 2670150379456,
+      "addrOfFlsSlotData": 2418634283376,
       "associatedCallback": 140730267138352,
       "associatedCallbackFound": true,
       "flsDataIsPtr": true,
@@ -148,7 +162,7 @@
       "locationofFlsSlotData": "heap"
     },
     {
-      "addrOfFlsSlotData": 932196641984,
+      "addrOfFlsSlotData": 624733187424,
       "associatedCallback": 140730296257184,
       "associatedCallbackFound": true,
       "flsDataIsPtr": false,
@@ -165,7 +179,413 @@
       "locationofFlsSlotData": "stackZeroInitialized"
     }
   ],
-  "pid": 724,
+  "fiber_local_storage_address": 2418634153264,
+  "pid": 8264,
   "process_name": "C:\\Users\\Dan\\Downloads\\file.exe",
   "tid": 0
+} {
+  "fiber_callbacks": [
+    {
+      "callback": 18446744073709551615,
+      "callbackMemProt": 0,
+      "callbackMemState": 0,
+      "callbackMemType": 0,
+      "callbackModBaseName": "",
+      "callbackSymbol": "",
+      "callbackUnbackedMem": false,
+      "index": 0
+    },
+    {
+      "callback": 140729337003808,
+      "callbackMemProt": 32,
+      "callbackMemState": 4096,
+      "callbackMemType": 16777216,
+      "callbackModBaseName": "\\Device\\HarddiskVolume2\\Windows\\System32\\ucrtbased.dll",
+      "callbackSymbol": "__vcrt_freefls",
+      "callbackUnbackedMem": false,
+      "index": 1
+    },
+    {
+      "callback": 18446744073709551615,
+      "callbackMemProt": 0,
+      "callbackMemState": 0,
+      "callbackMemType": 0,
+      "callbackModBaseName": "",
+      "callbackSymbol": "",
+      "callbackUnbackedMem": false,
+      "index": 2
+    },
+    {
+      "callback": 140729335967056,
+      "callbackMemProt": 32,
+      "callbackMemState": 4096,
+      "callbackMemType": 16777216,
+      "callbackModBaseName": "\\Device\\HarddiskVolume2\\Windows\\System32\\ucrtbased.dll",
+      "callbackSymbol": "destroy_fls",
+      "callbackUnbackedMem": false,
+      "index": 3
+    },
+    {
+      "callback": 140729973127584,
+      "callbackMemProt": 32,
+      "callbackMemState": 4096,
+      "callbackMemType": 16777216,
+      "callbackModBaseName": "\\Device\\HarddiskVolume2\\Windows\\System32\\vcruntime140d.dll",
+      "callbackSymbol": "__vcrt_freefls",
+      "callbackUnbackedMem": false,
+      "index": 4
+    },
+    {
+      "callback": 4919131752989213764,
+      "callbackMemProt": 0,
+      "callbackMemState": 0,
+      "callbackMemType": 0,
+      "callbackModBaseName": "",
+      "callbackSymbol": "",
+      "callbackUnbackedMem": false,
+      "index": 5
+    },
+    {
+      "callback": 4991471925827290437,
+      "callbackMemProt": 0,
+      "callbackMemState": 0,
+      "callbackMemType": 0,
+      "callbackModBaseName": "",
+      "callbackSymbol": "",
+      "callbackUnbackedMem": false,
+      "index": 6
+    },
+    {
+      "callback": 5063812098665367110,
+      "callbackMemProt": 0,
+      "callbackMemState": 0,
+      "callbackMemType": 0,
+      "callbackModBaseName": "",
+      "callbackSymbol": "",
+      "callbackUnbackedMem": false,
+      "index": 7
+    },
+    {
+      "callback": 18446744073709551615,
+      "callbackMemProt": 0,
+      "callbackMemState": 0,
+      "callbackMemType": 0,
+      "callbackModBaseName": "",
+      "callbackSymbol": "",
+      "callbackUnbackedMem": false,
+      "index": 8
+    },
+    {
+      "callback": 5280832617179597129,
+      "callbackMemProt": 0,
+      "callbackMemState": 0,
+      "callbackMemType": 0,
+      "callbackModBaseName": "",
+      "callbackSymbol": "",
+      "callbackUnbackedMem": false,
+      "index": 9
+    },
+    {
+      "callback": 7595718147998050665,
+      "callbackMemProt": 0,
+      "callbackMemState": 0,
+      "callbackMemType": 0,
+      "callbackModBaseName": "",
+      "callbackSymbol": "",
+      "callbackUnbackedMem": false,
+      "index": 10
+    }
+  ],
+  "fiber_data_addr_module": "",
+  "fiber_data_address": 3030742359136,
+  "fiber_data_entropy": 0.0,
+  "fiber_data_mem_prot": 4,
+  "fiber_data_mem_state": 4096,
+  "fiber_data_mem_type": 131072,
+  "fiber_data_unbacked": true,
+  "fiber_local_storage": [
+    {
+      "addrOfFlsSlotData": 3030742388272,
+      "associatedCallback": 140729335967056,
+      "associatedCallbackFound": true,
+      "flsDataIsPtr": true,
+      "flsDataPtrMemProt": 2,
+      "flsDataPtrMemState": 4096,
+      "flsDataPtrMemType": 16777216,
+      "flsDataPtrModBaseName": "\\Device\\HarddiskVolume2\\Windows\\System32\\ucrtbased.dll",
+      "flsSlotDataEntropyScore": 0.0,
+      "flsSlotDataMemProt": 4,
+      "flsSlotDataMemState": 4096,
+      "flsSlotDataMemType": 131072,
+      "flsSlotDataSize": 1984,
+      "index": 3,
+      "locationofFlsSlotData": "heap"
+    },
+    {
+      "addrOfFlsSlotData": 3030742388032,
+      "associatedCallback": 140729973127584,
+      "associatedCallbackFound": true,
+      "flsDataIsPtr": false,
+      "flsDataPtrMemProt": 0,
+      "flsDataPtrMemState": 0,
+      "flsDataPtrMemType": 0,
+      "flsDataPtrModBaseName": "",
+      "flsSlotDataEntropyScore": 0.0,
+      "flsSlotDataMemProt": 4,
+      "flsSlotDataMemState": 4096,
+      "flsSlotDataMemType": 131072,
+      "flsSlotDataSize": 176,
+      "index": 4,
+      "locationofFlsSlotData": "heap"
+    },
+    {
+      "addrOfFlsSlotData": 932717787528,
+      "associatedCallback": 4919131752989213764,
+      "associatedCallbackFound": true,
+      "flsDataIsPtr": false,
+      "flsDataPtrMemProt": 0,
+      "flsDataPtrMemState": 0,
+      "flsDataPtrMemType": 0,
+      "flsDataPtrModBaseName": "",
+      "flsSlotDataEntropyScore": 0.0,
+      "flsSlotDataMemProt": 4,
+      "flsSlotDataMemState": 4096,
+      "flsSlotDataMemType": 131072,
+      "flsSlotDataSize": 8,
+      "index": 5,
+      "locationofFlsSlotData": "stackUninitialized"
+    },
+    {
+      "addrOfFlsSlotData": 932717787560,
+      "associatedCallback": 4991471925827290437,
+      "associatedCallbackFound": true,
+      "flsDataIsPtr": true,
+      "flsDataPtrMemProt": 4,
+      "flsDataPtrMemState": 4096,
+      "flsDataPtrMemType": 131072,
+      "flsDataPtrModBaseName": "",
+      "flsSlotDataEntropyScore": 0.0,
+      "flsSlotDataMemProt": 4,
+      "flsSlotDataMemState": 4096,
+      "flsSlotDataMemType": 131072,
+      "flsSlotDataSize": 8,
+      "index": 6,
+      "locationofFlsSlotData": "stackUninitialized"
+    },
+    {
+      "addrOfFlsSlotData": 932717787592,
+      "associatedCallback": 5063812098665367110,
+      "associatedCallbackFound": true,
+      "flsDataIsPtr": false,
+      "flsDataPtrMemProt": 0,
+      "flsDataPtrMemState": 0,
+      "flsDataPtrMemType": 0,
+      "flsDataPtrModBaseName": "",
+      "flsSlotDataEntropyScore": 0.0,
+      "flsSlotDataMemProt": 4,
+      "flsSlotDataMemState": 4096,
+      "flsSlotDataMemType": 131072,
+      "flsSlotDataSize": 8,
+      "index": 7,
+      "locationofFlsSlotData": "stackUninitialized"
+    },
+    {
+      "addrOfFlsSlotData": 3030742404160,
+      "associatedCallback": 18446744073709551615,
+      "associatedCallbackFound": true,
+      "flsDataIsPtr": false,
+      "flsDataPtrMemProt": 0,
+      "flsDataPtrMemState": 0,
+      "flsDataPtrMemType": 0,
+      "flsDataPtrModBaseName": "",
+      "flsSlotDataEntropyScore": 0.0,
+      "flsSlotDataMemProt": 4,
+      "flsSlotDataMemState": 4096,
+      "flsSlotDataMemType": 131072,
+      "flsSlotDataSize": 4128,
+      "index": 8,
+      "locationofFlsSlotData": "heap"
+    }
+  ],
+  "fiber_local_storage_address": 3030742387664,
+  "pid": 6708,
+  "process_name": "C:\\Users\\Dan\\source\\repos\\fls_callback_view\\x64\\Debug\\fls_callback_view.exe",
+  "tid": 5432
+} {
+  "fiber_callbacks": [
+    {
+      "callback": 18446744073709551615,
+      "callbackMemProt": 0,
+      "callbackMemState": 0,
+      "callbackMemType": 0,
+      "callbackModBaseName": "",
+      "callbackSymbol": "",
+      "callbackUnbackedMem": false,
+      "index": 0
+    },
+    {
+      "callback": 140729337003808,
+      "callbackMemProt": 32,
+      "callbackMemState": 4096,
+      "callbackMemType": 16777216,
+      "callbackModBaseName": "\\Device\\HarddiskVolume2\\Windows\\System32\\ucrtbased.dll",
+      "callbackSymbol": "__vcrt_freefls",
+      "callbackUnbackedMem": false,
+      "index": 1
+    },
+    {
+      "callback": 18446744073709551615,
+      "callbackMemProt": 0,
+      "callbackMemState": 0,
+      "callbackMemType": 0,
+      "callbackModBaseName": "",
+      "callbackSymbol": "",
+      "callbackUnbackedMem": false,
+      "index": 2
+    },
+    {
+      "callback": 140729335967056,
+      "callbackMemProt": 32,
+      "callbackMemState": 4096,
+      "callbackMemType": 16777216,
+      "callbackModBaseName": "\\Device\\HarddiskVolume2\\Windows\\System32\\ucrtbased.dll",
+      "callbackSymbol": "destroy_fls",
+      "callbackUnbackedMem": false,
+      "index": 3
+    },
+    {
+      "callback": 140729973127584,
+      "callbackMemProt": 32,
+      "callbackMemState": 4096,
+      "callbackMemType": 16777216,
+      "callbackModBaseName": "\\Device\\HarddiskVolume2\\Windows\\System32\\vcruntime140d.dll",
+      "callbackSymbol": "__vcrt_freefls",
+      "callbackUnbackedMem": false,
+      "index": 4
+    },
+    {
+      "callback": 4919131752989213764,
+      "callbackMemProt": 0,
+      "callbackMemState": 0,
+      "callbackMemType": 0,
+      "callbackModBaseName": "",
+      "callbackSymbol": "",
+      "callbackUnbackedMem": false,
+      "index": 5
+    },
+    {
+      "callback": 4991471925827290437,
+      "callbackMemProt": 0,
+      "callbackMemState": 0,
+      "callbackMemType": 0,
+      "callbackModBaseName": "",
+      "callbackSymbol": "",
+      "callbackUnbackedMem": false,
+      "index": 6
+    },
+    {
+      "callback": 5063812098665367110,
+      "callbackMemProt": 0,
+      "callbackMemState": 0,
+      "callbackMemType": 0,
+      "callbackModBaseName": "",
+      "callbackSymbol": "",
+      "callbackUnbackedMem": false,
+      "index": 7
+    },
+    {
+      "callback": 18446744073709551615,
+      "callbackMemProt": 0,
+      "callbackMemState": 0,
+      "callbackMemType": 0,
+      "callbackModBaseName": "",
+      "callbackSymbol": "",
+      "callbackUnbackedMem": false,
+      "index": 8
+    },
+    {
+      "callback": 5280832617179597129,
+      "callbackMemProt": 0,
+      "callbackMemState": 0,
+      "callbackMemType": 0,
+      "callbackModBaseName": "",
+      "callbackSymbol": "",
+      "callbackUnbackedMem": false,
+      "index": 9
+    },
+    {
+      "callback": 7595718147998050665,
+      "callbackMemProt": 0,
+      "callbackMemState": 0,
+      "callbackMemType": 0,
+      "callbackModBaseName": "",
+      "callbackSymbol": "",
+      "callbackUnbackedMem": false,
+      "index": 10
+    }
+  ],
+  "fiber_data_addr_module": "",
+  "fiber_data_address": 3030742408304,
+  "fiber_data_entropy": 0.0,
+  "fiber_data_mem_prot": 4,
+  "fiber_data_mem_state": 4096,
+  "fiber_data_mem_type": 131072,
+  "fiber_data_unbacked": true,
+  "fiber_local_storage": [
+    {
+      "addrOfFlsSlotData": 3030742410048,
+      "associatedCallback": 140729335967056,
+      "associatedCallbackFound": true,
+      "flsDataIsPtr": true,
+      "flsDataPtrMemProt": 2,
+      "flsDataPtrMemState": 4096,
+      "flsDataPtrMemType": 16777216,
+      "flsDataPtrModBaseName": "\\Device\\HarddiskVolume2\\Windows\\System32\\ucrtbased.dll",
+      "flsSlotDataEntropyScore": 0.0,
+      "flsSlotDataMemProt": 4,
+      "flsSlotDataMemState": 4096,
+      "flsSlotDataMemType": 131072,
+      "flsSlotDataSize": 1984,
+      "index": 3,
+      "locationofFlsSlotData": "heap"
+    },
+    {
+      "addrOfFlsSlotData": 932719884424,
+      "associatedCallback": 5280832617179597129,
+      "associatedCallbackFound": true,
+      "flsDataIsPtr": false,
+      "flsDataPtrMemProt": 0,
+      "flsDataPtrMemState": 0,
+      "flsDataPtrMemType": 0,
+      "flsDataPtrModBaseName": "",
+      "flsSlotDataEntropyScore": 0.0,
+      "flsSlotDataMemProt": 4,
+      "flsSlotDataMemState": 4096,
+      "flsSlotDataMemType": 131072,
+      "flsSlotDataSize": 8,
+      "index": 9,
+      "locationofFlsSlotData": "stackUninitialized"
+    },
+    {
+      "addrOfFlsSlotData": 932719884456,
+      "associatedCallback": 7595718147998050665,
+      "associatedCallbackFound": true,
+      "flsDataIsPtr": false,
+      "flsDataPtrMemProt": 0,
+      "flsDataPtrMemState": 0,
+      "flsDataPtrMemType": 0,
+      "flsDataPtrModBaseName": "",
+      "flsSlotDataEntropyScore": 0.0,
+      "flsSlotDataMemProt": 4,
+      "flsSlotDataMemState": 4096,
+      "flsSlotDataMemType": 131072,
+      "flsSlotDataSize": 8,
+      "index": 10,
+      "locationofFlsSlotData": "stackUninitialized"
+    }
+  ],
+  "fiber_local_storage_address": 3030742409680,
+  "pid": 6708,
+  "process_name": "C:\\Users\\Dan\\source\\repos\\fls_callback_view\\x64\\Debug\\fls_callback_view.exe",
+  "tid": 5432
 }

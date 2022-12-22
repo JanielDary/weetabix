@@ -427,34 +427,42 @@ DWORD GetMaxFlsIndexValue()
 SIZE_T GetFlsValueSize(HANDLE& hProcess, MyFiber myFiber, PVOID addrInFlsSlot, std::vector<HeapEntryMeta> heapEntryMetaVector)
 {
 	// If FLS is stored in stack
-	// Check this works (Stack grows from high -> Low ) As one of our invalid addresses appears to still be in the stack
 	if ((addrInFlsSlot >= myFiber.fiberObject.StackLimit) && (addrInFlsSlot < myFiber.fiberObject.StackBase))
 	{
-		std::vector<uint32_t> fiberStackData = {};
+		std::vector<uint64_t> fiberStackData = {};
 		SIZE_T remainingStackSz = 0;
 		SIZE_T maxElements = 0;
 		int elementNumber = 0;
 
-		remainingStackSz = (uint64_t)myFiber.fiberObject.StackBase - (uint64_t)addrInFlsSlot;
-		maxElements = (remainingStackSz / sizeof(uint32_t)) + 1;
+		remainingStackSz = (uint64_t)addrInFlsSlot - (uint64_t)myFiber.fiberObject.StackLimit;
+		maxElements = (remainingStackSz / sizeof(uint64_t)) + 1;
 		fiberStackData.resize(maxElements);
 
 		// Read Stack for FiberObject.
-		if (!ReadProcessMemory(hProcess, addrInFlsSlot, fiberStackData.data(), remainingStackSz, NULL))
+		// Read from high->low memory. So stack limit (lowest address) towards our addrInFlsSlot (higher up in the stack).
+		if (!ReadProcessMemory(hProcess, myFiber.fiberObject.StackLimit, fiberStackData.data(), maxElements * sizeof(uint64_t), NULL))
 		{
 			printf("[-] ReadProcessMemory failed to read stack: %i\n", GetLastError());
 			return 0;
 		}
 
 		// Now iterate through until we get to 0xCCCCCCCC value to denote uninitialized stack memory and thus our end of FLS Slot stack data value.
-		for (const auto& stackElement : fiberStackData)
+		// Reverse iterator loop.
+		for (std::vector<uint64_t>::reverse_iterator it = fiberStackData.rbegin(); it != fiberStackData.rend(); ++it) 
 		{
-			if (stackElement == 0xCCCCCCCC)
+			if (*it == 0xCCCCCCCCCCCCCCCC)
 			{
-				return elementNumber * sizeof(uint32_t);
+				return elementNumber * sizeof(uint64_t);
 			}
 			elementNumber++;
 		}
+
+
+		// If we get here then we have encountered a Zero initialized stack and cannot determine FLS value size.
+		// Cobalt strike Artifact kit zero initializes the stack values, so looking for 0xCCCCCCCC uninitialized stack memory doesn't work. 
+			// Can this be used as a detection strategy amongst irregular fibers?? As the way the thread stack spoofing is implemented?
+
+
 	}
 	else // Check to see if it appears on the heap instead.
 	{

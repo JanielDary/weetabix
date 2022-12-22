@@ -320,7 +320,10 @@ BOOL ResultsWriter(const char* name, std::vector<FiberResult>& fiberResultVector
 // Unused funcs
 BOOL IsMemPrivExeCommit(HANDLE& hProcess, PVOID addrToRead);
 
+
 /*
+* https://www.nobugs.org/developer/win32/debug_crt_heap.html#table
+* https://en.wikipedia.org/wiki/Magic_number_(programming)#Debug_values
 * 0xABABABAB : Used by Microsoft's HeapAlloc() to mark "no man's land" guard bytes after allocated heap memory
 * 0xABADCAFE : A startup to this value to initialize all free memory to catch errant pointers
 * 0xBAADF00D : Used by Microsoft's LocalAlloc(LMEM_FIXED) to mark uninitialised allocated heap memory

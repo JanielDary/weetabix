@@ -1659,7 +1659,7 @@ void GetFlsCallbackTable(HANDLE& hProcess, MyFiber& myFiber, std::vector<HeapEnt
 		}
 
 		// Number of callback entries must be less than FLS slot maximum.
-		if (nCallbackEntries > 4096 && nCallbackEntries != 0)
+		if (nCallbackEntries > 4096 || nCallbackEntries == 0)
 		{
 			continue;
 		}
@@ -1773,7 +1773,11 @@ void GetFls(std::vector<MyFiber>& myHeapFiberVector, std::vector<HeapEntryMeta> 
 				{
 					if (callbackTable.pid == myFiber.pid && callbackTable.tid == myFiber.tid)
 					{
-						flsSlot.associatedCallback = (uint64_t)callbackTable.callbackEntries.at(index).callback;
+						// Check to see if we have any callback entries.
+						if (!callbackTable.callbackEntries.empty()) 
+						{
+							flsSlot.associatedCallback = (uint64_t)callbackTable.callbackEntries.at(index).callback;
+						}
 					}
 				}
 

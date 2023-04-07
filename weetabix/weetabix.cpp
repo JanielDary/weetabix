@@ -736,6 +736,7 @@ BOOL EnumNtHeap(HANDLE& hProcess, std::vector<HeapEntryMeta>& heapEntryMetaVecto
 		// New
 		HEAP_ENTRY firstHeapBlockEntryTmp = { 0 };
 
+		// We can change this later to only read the size of the _HEAP hdr. Then use the _HEAP_SEGMENT header to read the exact amount of memory required.
 		void* heapBuffer = calloc(1, mbiNtHeap.RegionSize);
 
 		if (!ReadProcessMemory(hProcess, mbiNtHeap.AllocationBase, heapBuffer, mbiNtHeap.RegionSize, NULL))
@@ -800,6 +801,34 @@ BOOL EnumNtHeap(HANDLE& hProcess, std::vector<HeapEntryMeta>& heapEntryMetaVecto
 			}
 
 		}
+
+		// Now collect Segment headers
+		std::vector<HEAP_SEGMENT> heapSegmentVector = {};
+		for (const auto& entry : segmentListEntryVector)
+		{
+
+			heapSegment = { 0 };
+
+			// Minus 0x18 since LIST_ENTRY starts 0x18 byes into _HEAP_SEGMENT structure.
+			//0:002 > dt ntdll!_HEAP_SEGMENT
+			//	+ 0x000 Entry            : _HEAP_ENTRY
+			//	+ 0x010 SegmentSignature : Uint4B
+			//	+ 0x014 SegmentFlags : Uint4B
+			//	+ 0x018 SegmentListEntry : _LIST_ENTRY
+			//	+ 0x028 Heap             : Ptr64 _HEAP
+			if (!ReadProcessMemory(hProcess, (LPCVOID)((uint64_t)entry - 0x18), &heapSegment, sizeof(HEAP_SEGMENT), NULL))
+			{
+				printf("[-] ReadProcessMemory failed to read heap Segment header :%i\n", GetLastError());
+			}
+
+			heapSegmentVector.push_back(heapSegment);
+
+		}
+
+		// User first valid entry & last valid entry to calculate exact size of memory to read.
+		// NOTE : the heapSegments seem to cover both heaps! So put some sort of check to see if we have already collected the owning heap
+		// NOTE : Use the HEAP_SEGMENT-> Heap (+0x028) value to check if this is a valid segment. It will be NULL if not valid. 
+		// NOTE : Also check segment for Number of pages == 0 to check it is invalid too.
 		
 
 		// Identify the first _HEAP_ENTRY block using _HEAP header

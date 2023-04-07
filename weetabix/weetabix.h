@@ -66,8 +66,12 @@ typedef struct _TEB_FLS_DATA
 // Not the actual structure, but has the same size.
 typedef struct _HEAP_ENTRY
 {
-	PVOID Data1;
-	PVOID Data2;
+	PVOID PreviousBlockPrivateData;
+	WORD Size;
+	UCHAR Flags;
+	UCHAR SmallTagIndex;
+	WORD PreviousSize;
+	UCHAR UnusedBytes;
 } HEAP_ENTRY, * PHEAP_ENTRY;
 
 // https://processhacker.sourceforge.io/doc/heapstruct_8h_source.html#l00014
@@ -79,6 +83,10 @@ typedef struct _HEAP_SEGMENT
 	ULONG SegmentFlags;
 	LIST_ENTRY SegmentListEntry;
 	struct _HEAP* Heap;
+	PVOID BaseAddress;
+	DWORD NumberOfPages;
+	HEAP_ENTRY* FirstEntry;
+	HEAP_ENTRY* LastValidEntry;
 	// ...
 } HEAP_SEGMENT, * PHEAP_SEGMENT;
 

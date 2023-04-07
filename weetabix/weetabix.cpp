@@ -717,7 +717,7 @@ BOOL EnumNtHeap(HANDLE& hProcess, std::vector<HeapEntryMeta>& heapEntryMetaVecto
 	for (const auto& mbiNtHeap : mbiNtHeapsVector)
 	{
 		HeapEntryMeta heapEntryMeta = { 0 };
-
+		
 		unsigned char encoding[16];
 		uint32_t encodeFlagMask = NULL;
 
@@ -732,6 +732,9 @@ BOOL EnumNtHeap(HANDLE& hProcess, std::vector<HeapEntryMeta>& heapEntryMetaVecto
 		uint16_t prevHeapBlockSize = NULL;
 		uint8_t unusedBytes = NULL;
 		uint8_t flags = NULL;
+
+		// New
+		HEAP_ENTRY firstHeapBlockEntryTmp = { 0 };
 
 		void* heapBuffer = calloc(1, mbiNtHeap.RegionSize);
 
@@ -756,10 +759,56 @@ BOOL EnumNtHeap(HANDLE& hProcess, std::vector<HeapEntryMeta>& heapEntryMetaVecto
 		memcpy(encoding, (const void*)((uint64_t)heapBuffer + 0x80), 16);
 		memcpy(&encodeFlagMask, (const void*)((uint64_t)heapBuffer + 0x07c), 4);
 
+
+		// Get HEAP_SEGMENTS
+		// dt ntdll!_HEAP_SEGMENT
+		/*	+ 0x000 Entry            : _HEAP_ENTRY
+			+ 0x010 SegmentSignature : Uint4B
+			+ 0x014 SegmentFlags : Uint4B
+			+ 0x018 SegmentListEntry : _LIST_ENTRY
+			+ 0x028 Heap : Ptr64 _HEAP
+			+ 0x030 BaseAddress : Ptr64 Void
+			+ 0x038 NumberOfPages : Uint4B
+			+ 0x040 FirstEntry : Ptr64 _HEAP_ENTRY
+			+ 0x048 LastValidEntry : Ptr64 _HEAP_ENTRY*/
+		HEAP_SEGMENT heapSegment = { 0 };
+		memcpy(&heapSegment, (const void*)(uint64_t)heapBuffer, sizeof(HEAP_SEGMENT));
+
+		std::vector<LIST_ENTRY *> segmentListEntryVector = {};
+		LIST_ENTRY segmentListEntry = {};
+		BOOL foundAllSegments = false;
+
+		// Then loop through heap segments to get a list of valid segments.
+		if (!ReadProcessMemory(hProcess, heapSegment.SegmentListEntry.Flink, &segmentListEntry, sizeof(segmentListEntry), NULL))
+		{
+			printf("[-] ReadProcessMemory failed to read SegmentListEntry->Flink:%i\n", GetLastError());
+		}
+
+		while (true)
+		{
+
+			if (foundInVector(segmentListEntryVector, segmentListEntry.Flink))
+			{
+				break;
+			}
+
+			segmentListEntryVector.push_back(segmentListEntry.Flink);
+
+			if (!ReadProcessMemory(hProcess, heapSegment.SegmentListEntry.Flink, &segmentListEntry, sizeof(segmentListEntry), NULL))
+			{
+				printf("[-] ReadProcessMemory failed to read SegmentListEntry->Flink [2]:%i\n", GetLastError());
+			}
+		}
+		
+		
+		// Now enumerate each heap segment to collect the _HEAP_ENTRY Data
+
+
 		// Identify the first _HEAP_ENTRY block using _HEAP header
 		//0:002 > dt ntdll!_HEAP
 		//    + 0x040 FirstEntry : Ptr64 _HEAP_ENTRY
 		memcpy(&firstHeapBlockEntry, (const void*)((uint64_t)heapBuffer + 0x040), 8);
+		//memcpy(&firstHeapBlockEntryTmp, (const void*)((uint64_t)heapBuffer + 0x040), 8);
 
 		// Calculate the offset of the first _HEAP_ENTRY within heapBuffer.
 		firstHeapBlockEntryOffset = firstHeapBlockEntry - (uint64_t)mbiNtHeap.AllocationBase;

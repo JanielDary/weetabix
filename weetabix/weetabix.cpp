@@ -794,15 +794,13 @@ BOOL EnumNtHeap(HANDLE& hProcess, std::vector<HeapEntryMeta>& heapEntryMetaVecto
 
 			segmentListEntryVector.push_back(segmentListEntry.Flink);
 
-			if (!ReadProcessMemory(hProcess, heapSegment.SegmentListEntry.Flink, &segmentListEntry, sizeof(segmentListEntry), NULL))
+			if (!ReadProcessMemory(hProcess, segmentListEntry.Flink, &segmentListEntry, sizeof(segmentListEntry), NULL))
 			{
 				printf("[-] ReadProcessMemory failed to read SegmentListEntry->Flink [2]:%i\n", GetLastError());
 			}
+
 		}
 		
-		
-		// Now enumerate each heap segment to collect the _HEAP_ENTRY Data
-
 
 		// Identify the first _HEAP_ENTRY block using _HEAP header
 		//0:002 > dt ntdll!_HEAP

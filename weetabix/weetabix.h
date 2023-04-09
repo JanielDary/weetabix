@@ -71,6 +71,7 @@ typedef struct _HEAP_ENTRY
 	UCHAR Flags;
 	UCHAR SmallTagIndex;
 	WORD PreviousSize;
+	UCHAR SegmentOffset;
 	UCHAR UnusedBytes;
 } HEAP_ENTRY, * PHEAP_ENTRY;
 
@@ -87,6 +88,7 @@ typedef struct _HEAP_SEGMENT
 	DWORD NumberOfPages;
 	HEAP_ENTRY* FirstEntry;
 	HEAP_ENTRY* LastValidEntry;
+	DWORD NumberOfUnCommittedPages;
 	// ...
 } HEAP_SEGMENT, * PHEAP_SEGMENT;
 

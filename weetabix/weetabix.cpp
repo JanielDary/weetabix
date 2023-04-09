@@ -821,78 +821,100 @@ BOOL EnumNtHeap(HANDLE& hProcess, std::vector<HeapEntryMeta>& heapEntryMetaVecto
 				printf("[-] ReadProcessMemory failed to read heap Segment header :%i\n", GetLastError());
 			}
 
+			// Validate heapSegment
+			if (heapSegment.Heap == NULL || heapSegment.NumberOfPages == NULL || heapSegment.FirstEntry == NULL || heapSegment.SegmentSignature != 0xffeeffee)
+				continue;
+
 			heapSegmentVector.push_back(heapSegment);
 
 		}
 
-		// User first valid entry & last valid entry to calculate exact size of memory to read.
-		// NOTE : the heapSegments seem to cover both heaps! So put some sort of check to see if we have already collected the owning heap
-		// NOTE : Use the HEAP_SEGMENT-> Heap (+0x028) value to check if this is a valid segment. It will be NULL if not valid. 
-		// NOTE : Also check segment for Number of pages == 0 to check it is invalid too.
-		
 
-		// Identify the first _HEAP_ENTRY block using _HEAP header
-		//0:002 > dt ntdll!_HEAP
-		//    + 0x040 FirstEntry : Ptr64 _HEAP_ENTRY
-		memcpy(&firstHeapBlockEntry, (const void*)((uint64_t)heapBuffer + 0x040), 8);
-		//memcpy(&firstHeapBlockEntryTmp, (const void*)((uint64_t)heapBuffer + 0x040), 8);
 
-		// Calculate the offset of the first _HEAP_ENTRY within heapBuffer.
-		firstHeapBlockEntryOffset = firstHeapBlockEntry - (uint64_t)mbiNtHeap.AllocationBase;
-		heapBlock = (uint64_t)heapBuffer + firstHeapBlockEntryOffset;
+		// Loop through the _HEAP_SEGMENT to read regions of memory for committed heap blocks.
+		for (const auto& segment : heapSegmentVector) {
 
-		// Loop through _HEAP_ENTRY blocks of an NTheap.
-		// The region size equals the number of committed heap bytes.
-		while (((firstHeapBlockEntry + currentHeapBlockEntryOffset) - (uint64_t)mbiNtHeap.AllocationBase) < mbiNtHeap.RegionSize)
-		{
-			// Decode encoded _HEAP_ENTRY
-			DecodeHeader(encodeFlagMask, encoding, heapBlock);
 
-			// Get HEAP_ENTRY Size, Flags, PreviousSize (PreviousBlockSize) & UnusedBytes.
-			//  0:003 > dt _HEAP_ENTRY
-			//    ntdll!_HEAP_ENTRY
-			//    + 0x008 Size              : Uint2B
-			//    + 0x00a Flags             : UChar
-			//    + 0x00b SmallTagIndex     : UChar
-			//    + 0x00c PreviousSize      : Uint2B
-			//    + 0x00f UnusedBytes       : UChar
-			memcpy(&heapBlockSize, (const void*)(heapBlock + 0x008), 2);
-			memcpy(&flags, (const void*)(heapBlock + 0x00a), 1);
-			memcpy(&prevHeapBlockSize, (const void*)(heapBlock + 0x00c), 2);
-			memcpy(&unusedBytes, (const void*)(heapBlock + 0x00f), 1);
+			// Size of Mem to read for committed heap blocks
+			// From : FirstEntry
+			// To : LastValidEntry - (NumberOfUnCommittedPages *  PageSize)
+			uint64_t lastValidCommitedEntry = NULL;
+			uint64_t nBytesCommittedHeapBlocks = NULL;
 
-			// Size & PreviousSize need to be multiplied by the granularity which is:
-			// 0x10 for x64.
-			// 0x08 for x86.
-			heapBlockSize *= Granulariy;
-			prevHeapBlockSize *= Granulariy;
+			lastValidCommitedEntry = (uint64_t)segment.LastValidEntry - (segment.NumberOfUnCommittedPages * 0x1000);
+			nBytesCommittedHeapBlocks = lastValidCommitedEntry - (uint64_t)segment.FirstEntry;
 
-			// Then calculate the requested size in bytes. 
-			// This will be the 3rd parameter given to ntdll!RtlAllocateHeap when creating a Fiber Object via CreateFiberEx & ConvertThreadToFiber/Ex API calls.
-			requestedBytes = heapBlockSize - unusedBytes;
-			heapBlockAddress = firstHeapBlockEntry + currentHeapBlockEntryOffset;
+			uint64_t* heapBlocksBuffer = (uint64_t *)calloc(1, nBytesCommittedHeapBlocks);
 
-			/*
-			printf("Address:            0x0000%llx\n", heapBlockAddress);
-			printf("Heap Block Size:    0x%x\n", heapBlockSize);
-			printf("Previous   Size:    0x%x\n", prevHeapBlockSize);
-			printf("Flags:              0x%x\n", flags);
-			printf("Requested bytes:    0x%x\n\n", requestedBytes);
-			*/
+			if (!ReadProcessMemory(hProcess, (LPCVOID)segment.FirstEntry, heapBlocksBuffer, nBytesCommittedHeapBlocks, NULL))
+			{
+				printf("[-] ReadProcessMemory failed to read heap Segment buffer :%i\n", GetLastError());
+				free(heapBlocksBuffer);
+				continue;
+			}
 
-			// Save _HEAP_ENTRY info.
-			heapEntryMeta.pid = (DWORD)pbi.UniqueProcessId;
-			heapEntryMeta.ntHeapAddr = mbiNtHeap.AllocationBase;
-			heapEntryMeta.heapBlockAddr = heapBlockAddress;
-			heapEntryMeta.heapBlockSize = heapBlockSize;
-			heapEntryMeta.flags = flags;
-			heapEntryMeta.unusedBytes = unusedBytes;
-			heapEntryMeta.requestedBytes = requestedBytes;
-			heapEntryMetaVector.push_back(heapEntryMeta);
+			uint64_t currentHeapBlockEntry = 0;
+			uint64_t blockOffset = 0;
+			uint64_t heapBlocksBufferTmp = (uint64_t)heapBlocksBuffer;
 
-			currentHeapBlockEntryOffset += heapBlockSize;
-			heapBlock += heapBlockSize;
+			currentHeapBlockEntry = (uint64_t)segment.FirstEntry;
+
+			// Enumerate _HEAP_ENTRY blocks. 
+			while (currentHeapBlockEntry < lastValidCommitedEntry)
+			{
+				// Decode encoded _HEAP_ENTRY
+				DecodeHeader(encodeFlagMask, encoding, (uint64_t)heapBlocksBufferTmp);
+
+				// Copy _HEAP_ENTRY header
+				//  0:003 > dt _HEAP_ENTRY
+				//    ntdll!_HEAP_ENTRY
+				//    + 0x008 Size              : Uint2B
+				//    + 0x00a Flags             : UChar
+				//    + 0x00b SmallTagIndex     : UChar
+				//    + 0x00c PreviousSize      : Uint2B
+				//    + 0x00f UnusedBytes       : UChar
+				HEAP_ENTRY heapEntryHdr = { 0 };
+				memcpy(&heapEntryHdr, (void *)heapBlocksBufferTmp, sizeof(HEAP_ENTRY));
+
+				// Size & PreviousSize need to be multiplied by the granularity which is:
+				// 0x10 for x64.
+				// 0x08 for x86.
+				heapEntryHdr.Size *= Granulariy;
+				heapEntryHdr.PreviousSize *= Granulariy;
+
+				// This will be the 3rd parameter given to ntdll!RtlAllocateHeap when creating a Fiber Object via CreateFiberEx & ConvertThreadToFiber/Ex API calls.
+				requestedBytes = heapEntryHdr.Size - heapEntryHdr.UnusedBytes;
+
+				/*
+				printf("Address:            0x0000%llx\n", currentHeapBlockEntry);
+				printf("Heap Block Size:    0x%x\n", heapEntryHdr.Size);
+				printf("Previous   Size:    0x%x\n", heapEntryHdr.PreviousSize);
+				printf("Flags:              0x%x\n", heapEntryHdr.Flags);
+				printf("Unused Bytes   :    0x%x\n", heapEntryHdr.UnusedBytes);
+				printf("Requested bytes:    0x%x\n\n", requestedBytes);
+				*/
+
+				// Save _HEAP_ENTRY info
+				heapEntryMeta.pid = (DWORD)pbi.UniqueProcessId;
+				heapEntryMeta.ntHeapAddr = (PVOID)segment.Heap;
+				heapEntryMeta.heapBlockAddr = currentHeapBlockEntry;
+				heapEntryMeta.heapBlockSize = heapEntryHdr.Size;
+				heapEntryMeta.flags = heapEntryHdr.Flags;
+				heapEntryMeta.unusedBytes = heapEntryHdr.UnusedBytes;
+				heapEntryMeta.requestedBytes = requestedBytes;
+				heapEntryMetaVector.push_back(heapEntryMeta);
+
+				// Update address of next HEAP_ENTRY 
+				currentHeapBlockEntry += heapEntryHdr.Size;
+				// Increment buffer to start of next HEAP_ENTRY
+				heapBlocksBufferTmp += heapEntryHdr.Size;
+			}
+	
+			free(heapBlocksBuffer);
 		}
+
+
+		// Remove this to only read the fields we care about rather than whole heap!
 		free(heapBuffer);
 	}
 

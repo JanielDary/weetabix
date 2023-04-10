@@ -14,8 +14,9 @@ Weetabix then applies a set of enrichments such as memory protections, symbol+mo
 ## Usage
 ![image](https://user-images.githubusercontent.com/60667846/230958277-66fc257d-7f2c-4c24-b79e-6380256b447f.png)
 
-## Caveats 
-*
+## NOTE
+* This tool requires symbols to be correctly configured on Windows for callback symbol resolution.
+* PoC was tested on Windows 10 19044. Targets x64 processes.
 
 ## Credit
 * Json.hpp project for NDJSON file output (https://github.com/nlohmann/json).

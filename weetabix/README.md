@@ -12,7 +12,7 @@ Weetabix identifies which Threads are running Fibers then extracts:
 Weetabix then applies a set of enrichments such as memory protections, symbol+module resolutions & entropy scores to allow one to distinguish legitimate from malicious fiber use.  
 
 ## Usage
-``
+![image](https://user-images.githubusercontent.com/60667846/230958277-66fc257d-7f2c-4c24-b79e-6380256b447f.png)
 
 ## Caveats 
 *

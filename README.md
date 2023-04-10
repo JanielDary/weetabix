@@ -16,7 +16,7 @@ Weetabix then applies a set of enrichments such as memory protections, symbol+mo
 
 ## Detection Use Cases with sample output from Weetabix
 
-#### Malicious callback manipulation
+### Malicious callback manipulation
 Tested against an attack tool that overwrites a default Fiber local storage callback function. The malicious callback function is executed whenever the fiber/thread exists or the associated fiber loca storage slot is freed. 
 
 Weetabix finds two suspicous callbacks
@@ -25,7 +25,7 @@ Weetabix finds two suspicous callbacks
 
 ![image](https://user-images.githubusercontent.com/60667846/230966652-f1e05128-90b4-46e7-ba2e-82662c1c0fe0.png)
 
-#### Unorthodox use of Fibers by CobaltStrike's Artifact kit when using Thread Stack Spoofing
+### Unorthodox use of Fibers by CobaltStrike's Artifact kit when using Thread Stack Spoofing
 This reveals only a single fiber being used on a thread. This is irregular since Fibers were designed with multi-tasking in mind so one would expect two or more fibers/Thread. In addition 
 1. FiberData points to unbacked memory.
 2. There is no Fiber local storage which is non-standard behaviour.

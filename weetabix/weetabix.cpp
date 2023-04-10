@@ -717,28 +717,12 @@ BOOL EnumNtHeap(HANDLE& hProcess, std::vector<HeapEntryMeta>& heapEntryMetaVecto
 	for (const auto& mbiNtHeap : mbiNtHeapsVector)
 	{
 		HeapEntryMeta heapEntryMeta = { 0 };
-		
 		unsigned char encoding[16];
 		uint32_t encodeFlagMask = NULL;
-
-		uint64_t heapBlock = NULL;
-		uint64_t firstHeapBlockEntry = NULL;
-		uint64_t firstHeapBlockEntryOffset = NULL;
-		uint64_t currentHeapBlockEntryOffset = NULL;
-		uint64_t heapBlockAddress = NULL;
-
 		uint64_t requestedBytes = NULL;
-		uint16_t heapBlockSize = NULL;
-		uint16_t prevHeapBlockSize = NULL;
-		uint8_t unusedBytes = NULL;
-		uint8_t flags = NULL;
 
-		// New
-		HEAP_ENTRY firstHeapBlockEntryTmp = { 0 };
-
-		// We can change this later to only read the size of the _HEAP hdr. Then use the _HEAP_SEGMENT header to read the exact amount of memory required.
+		// We could change this later to only read the size of the _HEAP hdr but we would have to manually define the struct.
 		void* heapBuffer = calloc(1, mbiNtHeap.RegionSize);
-
 		if (!ReadProcessMemory(hProcess, mbiNtHeap.AllocationBase, heapBuffer, mbiNtHeap.RegionSize, NULL))
 		{
 			printf("[-] ReadProcessMemory failed to read heap: %i\n", GetLastError());
@@ -760,7 +744,6 @@ BOOL EnumNtHeap(HANDLE& hProcess, std::vector<HeapEntryMeta>& heapEntryMetaVecto
 		memcpy(encoding, (const void*)((uint64_t)heapBuffer + 0x80), 16);
 		memcpy(&encodeFlagMask, (const void*)((uint64_t)heapBuffer + 0x07c), 4);
 
-
 		// Get HEAP_SEGMENTS
 		// dt ntdll!_HEAP_SEGMENT
 		/*	+ 0x000 Entry            : _HEAP_ENTRY
@@ -775,9 +758,8 @@ BOOL EnumNtHeap(HANDLE& hProcess, std::vector<HeapEntryMeta>& heapEntryMetaVecto
 		HEAP_SEGMENT heapSegment = { 0 };
 		memcpy(&heapSegment, (const void*)(uint64_t)heapBuffer, sizeof(HEAP_SEGMENT));
 
-		std::vector<LIST_ENTRY *> segmentListEntryVector = {};
+		std::vector<LIST_ENTRY*> segmentListEntryVector = {};
 		LIST_ENTRY segmentListEntry = {};
-		BOOL foundAllSegments = false;
 
 		// Then loop through heap segments to get a list of valid segments.
 		if (!ReadProcessMemory(hProcess, heapSegment.SegmentListEntry.Flink, &segmentListEntry, sizeof(segmentListEntry), NULL))
@@ -806,7 +788,6 @@ BOOL EnumNtHeap(HANDLE& hProcess, std::vector<HeapEntryMeta>& heapEntryMetaVecto
 		std::vector<HEAP_SEGMENT> heapSegmentVector = {};
 		for (const auto& entry : segmentListEntryVector)
 		{
-
 			heapSegment = { 0 };
 
 			// Minus 0x18 since LIST_ENTRY starts 0x18 byes into _HEAP_SEGMENT structure.
@@ -829,11 +810,8 @@ BOOL EnumNtHeap(HANDLE& hProcess, std::vector<HeapEntryMeta>& heapEntryMetaVecto
 
 		}
 
-
-
 		// Loop through the _HEAP_SEGMENT to read regions of memory for committed heap blocks.
 		for (const auto& segment : heapSegmentVector) {
-
 
 			// Size of Mem to read for committed heap blocks
 			// From : FirstEntry
@@ -844,7 +822,7 @@ BOOL EnumNtHeap(HANDLE& hProcess, std::vector<HeapEntryMeta>& heapEntryMetaVecto
 			lastValidCommitedEntry = (uint64_t)segment.LastValidEntry - (segment.NumberOfUnCommittedPages * 0x1000);
 			nBytesCommittedHeapBlocks = lastValidCommitedEntry - (uint64_t)segment.FirstEntry;
 
-			uint64_t* heapBlocksBuffer = (uint64_t *)calloc(1, nBytesCommittedHeapBlocks);
+			uint64_t* heapBlocksBuffer = (uint64_t*)calloc(1, nBytesCommittedHeapBlocks);
 
 			if (!ReadProcessMemory(hProcess, (LPCVOID)segment.FirstEntry, heapBlocksBuffer, nBytesCommittedHeapBlocks, NULL))
 			{
@@ -874,7 +852,7 @@ BOOL EnumNtHeap(HANDLE& hProcess, std::vector<HeapEntryMeta>& heapEntryMetaVecto
 				//    + 0x00c PreviousSize      : Uint2B
 				//    + 0x00f UnusedBytes       : UChar
 				HEAP_ENTRY heapEntryHdr = { 0 };
-				memcpy(&heapEntryHdr, (void *)heapBlocksBufferTmp, sizeof(HEAP_ENTRY));
+				memcpy(&heapEntryHdr, (void*)heapBlocksBufferTmp, sizeof(HEAP_ENTRY));
 
 				// Size & PreviousSize need to be multiplied by the granularity which is:
 				// 0x10 for x64.
@@ -909,7 +887,7 @@ BOOL EnumNtHeap(HANDLE& hProcess, std::vector<HeapEntryMeta>& heapEntryMetaVecto
 				// Increment buffer to start of next HEAP_ENTRY
 				heapBlocksBufferTmp += heapEntryHdr.Size;
 			}
-	
+
 			free(heapBlocksBuffer);
 		}
 

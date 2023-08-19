@@ -1,5 +1,6 @@
 # Weetabix
-<image src="https://github.com/JanielDary/weetabix/assets/60667846/9c4c7b50-108f-4be9-9f8d-1963d5782ada" width="312" height="230">
+![image](https://github.com/JanielDary/weetabix/assets/60667846/ee6ff946-2ff3-4a59-8845-2680f9a8a776)
+
 
 
 This tool demonstrates a PoC technique for enumerating Windows Fibers from process memory allowing defenders to distinguish legitimate from malicious Fiber use.

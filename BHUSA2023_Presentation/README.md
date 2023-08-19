@@ -1,5 +1,7 @@
 ## From Dead Data to Digestion: Extracting Windows Fibers for your digital forensics diet
 
+### https://www.blackhat.com/us-23/briefings/schedule/#from-dead-data-to-digestion-extracting-windows-fibers-for-your-digital-forensics-diet-32832
+
 ### Speakers
 
 Daniel Jary

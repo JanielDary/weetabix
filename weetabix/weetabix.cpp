@@ -1781,6 +1781,7 @@ void GetFls(std::vector<MyFiber>& myHeapFiberVector, std::vector<HeapEntryMeta> 
 	{
 		HANDLE hProcess = NULL;
 		FlsSlot flsSlot = {};
+		SIZE_T nBytesRead = 0;
 
 		if (myFiber.fiberObject.FlsData == NULL)
 		{
@@ -1796,7 +1797,6 @@ void GetFls(std::vector<MyFiber>& myHeapFiberVector, std::vector<HeapEntryMeta> 
 		}
 
 		MEMORY_BASIC_INFORMATION mbi;
-		size_t szToRead = NULL;
 		TEB_FLS_DATA fls_data = {};
 
 		if (!IsMemReadable(hProcess, myFiber.fiberObject.FlsData, mbi))
@@ -1805,28 +1805,11 @@ void GetFls(std::vector<MyFiber>& myHeapFiberVector, std::vector<HeapEntryMeta> 
 			goto Cleanup;
 		}
 
-		// flsDataSz should have already been populated by EnrichMyFiberVector().
-		// If flsDataSz == 0, set this to remaining readable bytes from the base allocation.
-		if (myFiber.flsDataSz != NULL)
-		{
-			szToRead = myFiber.flsDataSz;
-		}
-		else
-		{
-			szToRead = GetRemainingRegionSize(myFiber.fiberObject.FlsData, mbi);
-		}
-
-		// Make sure the remaining region size doesn't exceed the max possible number of FLS entries.
-		if (maxIndexes - 1 > 4078)
-		{
-			maxIndexes = 4079;
-		}
-
 		// Read FLS_DATA for the fiber
 		// This points to the LIST_ENTRY associated with the fiber, allowing one to determine which FLS slots belong to which fiber.
-		if (!ReadProcessMemory(hProcess, myFiber.fiberObject.FlsData, &fls_data, szToRead, NULL))
+		if (!ReadProcessMemory(hProcess, myFiber.fiberObject.FlsData, &fls_data, sizeof(TEB_FLS_DATA), &nBytesRead))
 		{
-			printf("ReadProcessMemory failed :%i\n", GetLastError());
+			printf("ReadProcessMemory failed to read FlsData in GetFls() :%i\n", GetLastError());
 			goto Cleanup;
 		}
 

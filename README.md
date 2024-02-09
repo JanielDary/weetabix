@@ -1,3 +1,10 @@
+## BlackHat USA 2023 presentation - From Dead Data to Digestion: Extracting Windows Fibers for Your Digital Forensics Diet
+https://www.youtube.com/watch?v=lWrBv1Cig1M&ab_channel=BlackHat <br><br>
+https://www.blackhat.com/us-23/briefings/schedule/#from-dead-data-to-digestion-extracting-windows-fibers-for-your-digital-forensics-diet-32832
+
+*PowerPoint slides included in this repository
+
+---
 # Weetabix
 ![image](https://github.com/JanielDary/weetabix/assets/60667846/ee6ff946-2ff3-4a59-8845-2680f9a8a776)
 
